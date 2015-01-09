@@ -31,24 +31,27 @@ public class Model
 				{
 					StringTokenizer st = new StringTokenizer(line);
 
-					switch (st.nextToken())
+					if (st.hasMoreTokens())
 					{
-					case "v":
-						vertices.add(new Vector3D());
-						vertices.get(vertices.size() - 1).set(
-								Double.parseDouble(st.nextToken()),
-								Double.parseDouble(st.nextToken()),
-								Double.parseDouble(st.nextToken()));
-						transVertices.add(new Vector3D());
-						transVertices.get(transVertices.size() - 1).set(
-								vertices.get(vertices.size() - 1));
-						break;
-					case "f":
-						faces.add(new Surface());
-						while (st.hasMoreTokens())
+						switch (st.nextToken())
 						{
-							faces.get(faces.size() - 1).addPoint(
-									Integer.parseInt(st.nextToken()) - 1);
+						case "v":
+							vertices.add(new Vector3D());
+							vertices.get(vertices.size() - 1).set(
+									Double.parseDouble(st.nextToken()),
+									Double.parseDouble(st.nextToken()),
+									Double.parseDouble(st.nextToken()));
+							transVertices.add(new Vector3D());
+							transVertices.get(transVertices.size() - 1).set(
+									vertices.get(vertices.size() - 1));
+							break;
+						case "f":
+							faces.add(new Surface());
+							while (st.hasMoreTokens())
+							{
+								faces.get(faces.size() - 1).addPoint(
+										Integer.parseInt(st.nextToken()) - 1);
+							}
 						}
 					}
 					line = br.readLine();
@@ -62,7 +65,7 @@ public class Model
 		}
 	}
 
-	public void draw(Graphics2D g, Matrix3D transform)
+	public void draw(Graphics2D g, Matrix3D transform, boolean wireframe)
 	{
 		for (int vert = 0; vert < transVertices.size(); vert++)
 		{
@@ -81,8 +84,11 @@ public class Model
 				yPoints[point] = (int) (transVertices.get(face.getPoint(point)).get(1) * 40 + 400);
 			}
 
-			g.setColor(Color.BLUE);
-			//g.fillPolygon(xPoints, yPoints, face.getSideCount());
+			if (!wireframe)
+			{
+				g.setColor(Color.BLUE);
+				g.fillPolygon(xPoints, yPoints, face.getSideCount());
+			}
 
 			g.setColor(Color.BLACK);
 			g.drawPolygon(xPoints, yPoints, face.getSideCount());
@@ -118,7 +124,7 @@ public class Model
 			double sum = 0;
 			for (int i : points)
 			{
-				sum += transVertices.get(i).get(1);
+				sum += transVertices.get(i).get(2);
 			}
 			return sum / getSideCount();
 		}

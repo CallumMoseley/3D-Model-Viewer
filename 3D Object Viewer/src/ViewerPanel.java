@@ -2,30 +2,39 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
+import java.awt.event.MouseWheelListener;
 
 import javax.swing.JPanel;
 
-public class ViewerPanel extends JPanel implements MouseListener,
-		MouseMotionListener
+public class ViewerPanel extends JPanel implements KeyListener, MouseListener,
+		MouseMotionListener, MouseWheelListener
 {
 	private Model currentModel;
 	private Matrix3D transform;
 	private Point dragStart;
+	private boolean wireframe;
 
 	public ViewerPanel()
 	{
-		this.setPreferredSize(new Dimension(1024, 768));
-		
+		setPreferredSize(new Dimension(1024, 768));
+		setFocusable(true);
+
+		addKeyListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);
-		
+		addMouseWheelListener(this);
+
 		transform = new Matrix3D();
+		wireframe = false;
 		repaint();
 	}
-	
+
 	public void openFile(String filename)
 	{
 		currentModel = new Model(filename);
@@ -38,7 +47,7 @@ public class ViewerPanel extends JPanel implements MouseListener,
 		g.setColor(getBackground());
 		g.fillRect(0, 0, getWidth(), getHeight());
 		if (currentModel != null)
-			currentModel.draw((Graphics2D) g, transform);
+			currentModel.draw((Graphics2D) g, transform, wireframe);
 	}
 
 	@Override
@@ -50,10 +59,27 @@ public class ViewerPanel extends JPanel implements MouseListener,
 	@Override
 	public void mouseDragged(MouseEvent e)
 	{
-		transform.rotateX((e.getY() - dragStart.getY()) / 40);
-		transform.rotateY((dragStart.getX() - e.getX()) / 40);
+		transform.rotateX((dragStart.getY() - e.getY()) / 50);
+		transform.rotateY((e.getX() - dragStart.getX()) / 50);
 		dragStart = e.getPoint();
 		repaint();
+	}
+
+	@Override
+	public void mouseWheelMoved(MouseWheelEvent arg0)
+	{
+		transform.scale(Math.pow(1.1, -arg0.getWheelRotation()));
+		repaint();
+	}
+
+	@Override
+	public void keyPressed(KeyEvent arg0)
+	{
+		if (arg0.getKeyCode() == KeyEvent.VK_Z)
+		{
+			wireframe = !wireframe;
+			repaint();
+		}
 	}
 
 	@Override
@@ -78,6 +104,16 @@ public class ViewerPanel extends JPanel implements MouseListener,
 
 	@Override
 	public void mouseMoved(MouseEvent e)
+	{
+	}
+
+	@Override
+	public void keyReleased(KeyEvent arg0)
+	{
+	}
+
+	@Override
+	public void keyTyped(KeyEvent arg0)
 	{
 	}
 }
