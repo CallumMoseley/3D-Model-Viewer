@@ -2,6 +2,8 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.event.ComponentEvent;
+import java.awt.event.ComponentListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.event.MouseEvent;
@@ -13,10 +15,9 @@ import java.awt.event.MouseWheelListener;
 import javax.swing.JPanel;
 
 public class ViewerPanel extends JPanel implements KeyListener, MouseListener,
-		MouseMotionListener, MouseWheelListener
+		MouseMotionListener, MouseWheelListener, ComponentListener
 {
 	private Model currentModel;
-	private Matrix3D transform;
 	private Point dragStart;
 	private boolean wireframe;
 
@@ -29,16 +30,18 @@ public class ViewerPanel extends JPanel implements KeyListener, MouseListener,
 		addMouseListener(this);
 		addMouseMotionListener(this);
 		addMouseWheelListener(this);
+		addComponentListener(this);
 
-		transform = new Matrix3D();
 		wireframe = false;
 		repaint();
 	}
 
 	public void openFile(String filename)
 	{
-		currentModel = new Model(filename);
-		transform.identity();
+		currentModel = new Model();
+		currentModel.resetTransform();
+		currentModel.updateWindowSize(getWidth(), getHeight());
+		currentModel.loadModel(filename);
 		repaint();
 	}
 
@@ -47,7 +50,7 @@ public class ViewerPanel extends JPanel implements KeyListener, MouseListener,
 		g.setColor(getBackground());
 		g.fillRect(0, 0, getWidth(), getHeight());
 		if (currentModel != null)
-			currentModel.draw((Graphics2D) g, transform, wireframe);
+			currentModel.draw((Graphics2D) g, wireframe);
 	}
 
 	@Override
@@ -59,8 +62,8 @@ public class ViewerPanel extends JPanel implements KeyListener, MouseListener,
 	@Override
 	public void mouseDragged(MouseEvent e)
 	{
-		transform.rotateX((dragStart.getY() - e.getY()) / 50);
-		transform.rotateY((e.getX() - dragStart.getX()) / 50);
+		currentModel.rotateX((dragStart.getY() - e.getY()) / 50);
+		currentModel.rotateY((e.getX() - dragStart.getX()) / 50);
 		dragStart = e.getPoint();
 		repaint();
 	}
@@ -68,7 +71,7 @@ public class ViewerPanel extends JPanel implements KeyListener, MouseListener,
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent arg0)
 	{
-		transform.scale(Math.pow(1.1, -arg0.getWheelRotation()));
+		currentModel.scale(Math.pow(1.1, -arg0.getWheelRotation()));
 		repaint();
 	}
 
@@ -80,6 +83,14 @@ public class ViewerPanel extends JPanel implements KeyListener, MouseListener,
 			wireframe = !wireframe;
 			repaint();
 		}
+	}
+
+	@Override
+	public void componentResized(ComponentEvent e)
+	{
+		if (currentModel != null)
+			currentModel.updateWindowSize(getWidth(), getHeight());
+		repaint();
 	}
 
 	@Override
@@ -114,6 +125,21 @@ public class ViewerPanel extends JPanel implements KeyListener, MouseListener,
 
 	@Override
 	public void keyTyped(KeyEvent arg0)
+	{
+	}
+
+	@Override
+	public void componentMoved(ComponentEvent e)
+	{
+	}
+
+	@Override
+	public void componentShown(ComponentEvent e)
+	{
+	}
+
+	@Override
+	public void componentHidden(ComponentEvent e)
 	{
 	}
 }

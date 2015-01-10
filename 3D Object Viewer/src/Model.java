@@ -11,15 +11,27 @@ public class Model
 	private ArrayList<Vector3D> vertices;
 	private ArrayList<Vector3D> transVertices;
 	private ArrayList<Surface> faces;
-
-	public Model(String filename)
+	private Matrix3D transform;
+	private int frameWidth, frameHeight;
+	
+	public Model()
 	{
-		String[] tokens = filename.split("\\.");
-		String extension = tokens[tokens.length - 1];
-
 		vertices = new ArrayList<Vector3D>();
 		transVertices = new ArrayList<Vector3D>();
 		faces = new ArrayList<Surface>();
+		
+		transform = new Matrix3D();
+	}
+	
+	public void loadModel(String filename)
+	{
+		double minX = Double.POSITIVE_INFINITY;
+		double minY = Double.POSITIVE_INFINITY;
+		double maxX = Double.NEGATIVE_INFINITY;
+		double maxY = Double.NEGATIVE_INFINITY;
+		
+		String[] tokens = filename.split("\\.");
+		String extension = tokens[tokens.length - 1];
 
 		if (extension.equals("obj"))
 		{
@@ -44,6 +56,10 @@ public class Model
 							transVertices.add(new Vector3D());
 							transVertices.get(transVertices.size() - 1).set(
 									vertices.get(vertices.size() - 1));
+							minX = Math.min(minX, vertices.get(vertices.size() - 1).get(0));
+							minY = Math.min(minY, vertices.get(vertices.size() - 1).get(0));
+							maxX = Math.max(maxX, vertices.get(vertices.size() - 1).get(1));
+							maxY = Math.max(maxY, vertices.get(vertices.size() - 1).get(1));
 							break;
 						case "f":
 							faces.add(new Surface());
@@ -56,6 +72,11 @@ public class Model
 					}
 					line = br.readLine();
 				}
+
+				double width = maxX - minX;
+				double height = maxY - minY;
+				transform.scale(Math.min(frameWidth / width, frameHeight / height) * 0.9);
+				
 				br.close();
 			}
 			catch (Exception e)
@@ -64,8 +85,39 @@ public class Model
 			}
 		}
 	}
+	
+	public void rotateX(double theta)
+	{
+		transform.rotateX(theta);
+	}
+	
+	public void rotateY(double theta)
+	{
+		transform.rotateY(theta);
+	}
+	
+	public void rotateZ(double theta)
+	{
+		transform.rotateZ(theta);
+	}
+	
+	public void scale(double s)
+	{
+		transform.scale(s);
+	}
+	
+	public void updateWindowSize(int x, int y)
+	{
+		this.frameWidth = x / 2;
+		this.frameHeight = y / 2;
+	}
 
-	public void draw(Graphics2D g, Matrix3D transform, boolean wireframe)
+	public void resetTransform()
+	{
+		transform.identity();
+	}
+
+	public void draw(Graphics2D g, boolean wireframe)
 	{
 		for (int vert = 0; vert < transVertices.size(); vert++)
 		{
@@ -80,8 +132,8 @@ public class Model
 
 			for (int point = 0; point < face.getSideCount(); point++)
 			{
-				xPoints[point] = (int) (transVertices.get(face.getPoint(point)).get(0) * 40 + 500);
-				yPoints[point] = (int) (transVertices.get(face.getPoint(point)).get(1) * 40 + 400);
+				xPoints[point] = (int) (transVertices.get(face.getPoint(point)).get(0) + frameWidth);
+				yPoints[point] = (int) (transVertices.get(face.getPoint(point)).get(1) + frameHeight);
 			}
 
 			if (!wireframe)
