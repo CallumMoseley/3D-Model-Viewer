@@ -62,16 +62,22 @@ public class ViewerPanel extends JPanel implements KeyListener, MouseListener,
 	@Override
 	public void mouseDragged(MouseEvent e)
 	{
-		currentModel.rotateX((dragStart.getY() - e.getY()) / 50);
-		currentModel.rotateY((e.getX() - dragStart.getX()) / 50);
-		dragStart = e.getPoint();
+		if (currentModel != null)
+		{
+			currentModel.rotateX((dragStart.getY() - e.getY()) / 50);
+			currentModel.rotateY((e.getX() - dragStart.getX()) / 50);
+			dragStart = e.getPoint();
+		}
 		repaint();
 	}
 
 	@Override
 	public void mouseWheelMoved(MouseWheelEvent arg0)
 	{
-		currentModel.scale(Math.pow(1.1, -arg0.getWheelRotation()));
+		if (currentModel != null)
+		{
+			currentModel.scale(Math.pow(1.1, -arg0.getWheelRotation()));
+		}
 		repaint();
 	}
 
